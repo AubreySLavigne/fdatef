@@ -37,7 +37,8 @@ var Python = map[string]string{
 	"%U": "",
 	// Broken
 	"%W": "",
-	"%c": "Mon Jan 02 15:04:05 2006",
+	// Broken, issue with spacing the day space-padded ('Jan  2' vs 'Jan 2'
+	"%c": "Mon Jan  2 15:04:05 2006",
 	"%x": "01/02/06",
 	"%X": "15:04:05",
 	"%%": "%",

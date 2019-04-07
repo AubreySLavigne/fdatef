@@ -2,6 +2,7 @@ package fdatef
 
 import (
 	"fmt"
+	"os/exec"
 	"testing"
 	"time"
 
@@ -244,9 +245,9 @@ var pythonTests = []struct {
 	// {"1999-12-31T23:59:58.999Z", "%W", ""},
 	// {"2000-01-02T03:04:05Z", "%W", ""},
 
-	// Locale’s appropriate date and time representation.
-	{"1999-12-31T23:59:58.999Z", "%c", "Fri Dec 31 23:59:58 1999"},
-	{"2000-01-02T03:04:05Z", "%c", "Sun Jan 02 03:04:05 2000"},
+	// // Locale’s appropriate date and time representation.
+	// {"1999-12-31T23:59:58.999Z", "%c", "Fri Dec 31 23:59:58 1999"},
+	// {"2000-01-02T03:04:05Z", "%c", "Sun Jan 02 03:04:05 2000"},
 
 	// Locale’s appropriate date representation.
 	{"1999-12-31T23:59:58.999Z", "%x", "12/31/99"},
@@ -292,4 +293,52 @@ func TestPythonFormat(t *testing.T) {
 				fmt.Sprintf("'%s'", test.expected))
 		}
 	}
+}
+
+// TestPythonVerify checks whether the returned values match what is returned
+// by Python itself.
+//
+// These tests can be skipped if a Python3 Interpreter is not found.
+func TestPythonVerify(t *testing.T) {
+
+	if !doesPythonExist() {
+		t.Skip("Python3 is not installed. Skipping verifications")
+	}
+
+	for _, test := range pythonTests {
+
+		date, err := time.Parse(time.RFC3339Nano, test.date)
+		if err != nil {
+			t.Fatalf("%s", err)
+		}
+
+		goRes := FormatWithRules(date, test.format, formats.Python)
+
+		pyRes, err := pythonFormat(date, test.format)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if goRes != pyRes {
+			t.Errorf("Python Verification failed: Date %-26s, Format: %s, fdatef: %26s, python3: %s",
+				fmt.Sprintf("'%s'", test.date),
+				fmt.Sprintf("'%s'", test.format),
+				fmt.Sprintf("'%s'", goRes),
+				fmt.Sprintf("'%s'", pyRes))
+		}
+	}
+}
+
+func doesPythonExist() bool {
+	cmd := exec.Command("python3", "--version")
+	if err := cmd.Run(); err != nil {
+		return false
+	}
+
+	return true
+}
+
+func pythonFormat(date time.Time, format string) (string, error) {
+	out, err := exec.Command("python3", "verifications/py_date.py", format, date.Format("Mon Jan 02 15:04:05 2006")).Output()
+	return string(out), err
 }
