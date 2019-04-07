@@ -3,59 +3,23 @@ package fdatef
 import (
 	"strings"
 	"time"
+
+	"github.com/AubreySLavigne/fdatef/formats"
 )
 
-// Format returns a string representing the time, in the provided format.
+// Format returns a string representing the time t, in the provided format.
 //
-// This uses the Data Formatting method found in MySQL:
-// https://dev.mysql.com/doc/refman/8.0/en/date-and-time-functions.html#function_date-format
+// Format defaults to MySQL type formatting
 func Format(t time.Time, format string) string {
+	defaultRules := formats.MySQL
+	return FormatWithRules(t, format, defaultRules)
+}
 
-	rules := map[string]string{
-		"%a": "Mon",
-		"%b": "Jan",
-		"%c": "1",
-		// Broken
-		"%D": "2st",
-		"%d": "02",
-		"%e": "2",
-		// Broken
-		"%f": "000000",
-		"%H": "15",
-		"%h": "03",
-		"%I": "03",
-		"%i": "04",
-		// Broken
-		"%j": "003",
-		// Broken
-		"%k": "5",
-		"%l": "3",
-		"%M": "January",
-		"%m": "01",
-		"%p": "PM",
-		"%r": "03:04:05 PM",
-		"%S": "05",
-		"%s": "05",
-		"%T": "15:04:05",
-		// Broken
-		"%U": "",
-		// Broken
-		"%u": "",
-		// Broken
-		"%V": "",
-		// Broken
-		"%v": "",
-		"%W": "Monday",
-		// Broken
-		"%w": "",
-		"%X": "2006",
-		// Broken
-		"%x": "2006",
-		"%Y": "2006",
-		"%y": "06",
-		"%%": "%",
-	}
-
+// FormatWithRules is a generic formatting function.
+//
+// It accepts a map[string]string defining search and replace rules that
+// define the expected formatting.
+func FormatWithRules(t time.Time, format string, rules map[string]string) string {
 	for k, v := range rules {
 		format = strings.Replace(format, k, v, -1)
 	}
